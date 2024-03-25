@@ -1,5 +1,7 @@
 # THIS FILE IS REPONSABLE FOR THE FIRST LAYER OF THE YOLO API. HERE THE PADRONIZATION TAKE EFEECT
 
+import sys
+sys.path.append('src/')
 
 # abstract base class work
 from abc import ABC, abstractmethod
@@ -16,7 +18,7 @@ class BoundingBoxDetection:
         self.label_class = label_class
     
     def __str__(self):
-        return f'[{self.label_class}]: ({self.x1}, {self.y1}) ({self.x2}, {self.y2})'
+        return f'{self.label_class} {self.x1} {self.y1} {self.x2}, {self.y2}'
     
     def _validate_coordinates(self, x1, y1, x2, y2):
         """Validation of the coordinates."""
@@ -58,7 +60,7 @@ class BoundingBoxDetection:
         return future_center[0] - current_center[0], future_center[1] - current_center[1]
     
 
-# Father class of the YOLO API with the main methods (Train, Predict, Resume)
+# Father class of the YOLO API with the main methods (Train, Detect, Resume)
 class YOLO(ABC):
     """Represents the YOLO API."""
 
