@@ -1,7 +1,14 @@
 # THIS FILE IS REPONSABLE FOR THE FIRST LAYER OF THE YOLO API. HERE THE PADRONIZATION TAKE EFEECT
 
 import sys
-sys.path.append('src/')
+from pathlib import Path
+# add to path the location of this file
+YOLO_FILE = Path(__file__).resolve()
+ROOT_YOLO_FILE = YOLO_FILE.parents[0]
+if str(ROOT_YOLO_FILE) not in sys.path:
+    sys.path.append(str(ROOT_YOLO_FILE))
+    
+
 
 # abstract base class work
 from abc import ABC, abstractmethod
