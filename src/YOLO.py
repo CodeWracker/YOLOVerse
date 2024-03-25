@@ -71,6 +71,42 @@ class BoundingBoxDetection:
 class YOLO(ABC):
     """Represents the YOLO API."""
 
+    # ATRIBUTES
+    yolo_repo_download_path: str
+
+
+    # -------------
+    # PRIVATE METHODS
+    def _validate_path(self, path: str) -> bool:
+        """Validates the path."""
+        if path is None or path == "":
+            #  TODO: ADD TO LOG THAT THE PATH IS EMPTY
+            return False
+        if not Path(path).exists():
+            # TODO: ADD TO LOG THAT THE PATH DONT EXISTS AND WILL BE CREATED
+            try:
+                Path(path).mkdir(parents=True, exist_ok=True)
+            except:
+                # TODO: ADD TO LOG THAT THE PATH CANT BE CREATED
+                return False
+        return True
+
+
+    # -------------
+    # ABSTRACT METHODS
+
+    # initialize the model
+    @abstractmethod
+    def __init__(self, yolo_repo_download_path: str) -> None:
+        """
+        THIS CLASS ONLY CREATES AN UNIFORM API FOR EVERY YOLO IMPLEMENTATION, NOT IMPLEMENTING THE YOLO ITSELF.
+        SO, IN ORDER TO USE THIS CLASS, IT NEEDS THE REFERENCE FOR THE ORIGINAL IMPLEMENTATION OF THE YOLO VERSION YOU WANT TO USE.
+        THE CORRESPONDENT YOLO WILL BE DOWNLOADED TO THE PATH IN yolo_repo_download_path/{yolo_version} AND WILL BE IMPORTED IN THE CHILDREN WRAPPER CLASS
+        """
+        if(not self._validate_path(yolo_repo_download_path)):
+            self.yolo_repo_download_path = yolo_repo_download_path
+
+
     @abstractmethod
     def train(self, project_name: str, run_name: str, start_weights_path: str, data_yaml_path: str, batch_size: int, num_epochs: int) -> None:
         """Trains the YOLO model.
