@@ -1,5 +1,9 @@
 # THIS FILE IS REPONSABLE FOR THE FIRST LAYER OF THE YOLO API. HERE THE PADRONIZATION TAKE EFEECT
 
+
+# abstract base class work
+from abc import ABC, abstractmethod
+
 class BoundingBoxDetection:
     """Represents the detection of a bounding box in an image."""
 
@@ -52,3 +56,27 @@ class BoundingBoxDetection:
         future_center = future.center()
         # x, y
         return future_center[0] - current_center[0], future_center[1] - current_center[1]
+    
+
+# Father class of the YOLO API with the main methods (Train, Predict, Resume)
+class YOLO(ABC):
+    """Represents the YOLO API."""
+
+    @abstractmethod
+    def train(self, project_name: str, run_name: str, start_weights_path: str, data_yaml_path: str, batch_size: int, num_epochs: int) -> None:
+        """Trains the YOLO model.
+
+        Parameters:
+        - project_name (str): Name of the project. Models will be saved to 'project_name/run_name'.
+        - run_name (str): Name of the run. Models will be saved to 'project_name/run_name'.
+        - start_weights_path (str): Path to the initial weights file (.pt).
+        - data_yaml_path (str): Path to the data.yaml file.
+        - batch_size (int): Batch size used during training.
+        - num_epochs (int): Number of epochs for training.
+        """
+        pass
+
+    
+
+
+
