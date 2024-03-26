@@ -162,3 +162,5 @@ cython_debug/
 
 # YOLO download repo for testing
 yolo_repo/*
+# YOLO training results
+trainings/*

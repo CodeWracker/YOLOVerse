@@ -166,7 +166,7 @@ class YOLO(Logger):
     # PUBLIC METHODS
 
     # initialize the model
-    def __init__(self, yolo_repo_download_path: str, verbosity: int = 0) -> None:
+    def __init__(self, yolo_repo_download_path: str, verbosity: int = 0, force_gpu:bool = False) -> None:
         """
         THIS CLASS ONLY CREATES AN UNIFORM API FOR EVERY YOLO IMPLEMENTATION, NOT IMPLEMENTING THE YOLO ITSELF.
         SO, IN ORDER TO USE THIS CLASS, IT NEEDS THE REFERENCE FOR THE ORIGINAL IMPLEMENTATION OF THE YOLO VERSION YOU WANT TO USE.
@@ -175,6 +175,7 @@ class YOLO(Logger):
         super().__init__(verbosity = verbosity)
         self.yolo_repo_download_path = yolo_repo_download_path
         self._validate_yolo_download_path(yolo_repo_download_path)
+        self.force_gpu = force_gpu
 
 
     
