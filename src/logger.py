@@ -2,6 +2,15 @@ import os
 from pathlib import Path
 
 
+
+# add to path the location of this file
+LOGGER_FILE = Path(__file__).resolve()
+ROOT_LOGGER_FILE = LOGGER_FILE.parents[0]
+if str(ROOT_LOGGER_FILE) not in os.sys.path:
+    os.sys.path.append(str(ROOT_LOGGER_FILE))
+
+
+
 LOG_TYPES = ["ERROR", "WARNING", "INFO", "DEBUG"]
 
 
@@ -59,10 +68,10 @@ class Logger:
     
 
     
-    def get_verbose_definition():
+    def get_log_verbose_definition():
         return LOG_TYPES
     
-    def handle_event(self, event, type):
+    def handle_log_event(self, event, type):
         """Handles an event by logging it.
         
         Args:
@@ -86,7 +95,9 @@ class Logger:
         if self.save_file_path is None:
             # print with color red if it is an error, yellow if it is a warning
             if type == 0:
-                print('\033[91m' + str(log) + '\033[0m')
+                # if it is an error, raise an exception and print in red
+                # it will halt the execution
+                raise Exception('\033[91m' + str(log) + '\033[0m')
             elif type == 1:
                 print('\033[93m' + str(log) + '\033[0m')
             else:

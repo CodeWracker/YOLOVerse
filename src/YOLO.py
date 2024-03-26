@@ -4,17 +4,21 @@
 VERSIONS_REPOS = {"yolov7": "https://github.com/WongKinYiu/yolov7"}
 
 import sys
+import os
 from pathlib import Path
+# abstract base class work
+from abc import ABC, abstractmethod
+
+
+from logger import Logger
+
 # add to path the location of this file
 YOLO_FILE = Path(__file__).resolve()
 ROOT_YOLO_FILE = YOLO_FILE.parents[0]
 if str(ROOT_YOLO_FILE) not in sys.path:
     sys.path.append(str(ROOT_YOLO_FILE))
-import os
 
 
-# abstract base class work
-from abc import ABC, abstractmethod
 
 class BoundingBoxDetection:
     """Represents the detection of a bounding box in an image."""
@@ -71,7 +75,7 @@ class BoundingBoxDetection:
     
 
 # Father class of the YOLO API with the main methods (Train, Detect, Resume)
-class YOLO:
+class YOLO(Logger):
     """Represents the YOLO API."""
 
     # ATRIBUTES
@@ -80,17 +84,20 @@ class YOLO:
 
     # -------------
     # PRIVATE METHODS
-    def _validate_path(self, path: str) -> bool:
+    def _validate_yolo_download_path(self, path: str) -> bool:
         """Validates the path."""
         if path is None or path == "":
             #  TODO: ADD TO LOG THAT THE PATH IS EMPTY
+            self.handle_log_event("The path to download the YOLO repository is empty.", 0)
             return False
         if not Path(path).exists():
             # TODO: ADD TO LOG THAT THE PATH DONT EXISTS AND WILL BE CREATED
+            self.handle_log_event("The path to download the YOLO repository does not exist. It will be created.", 2)
             try:
                 Path(path).mkdir(parents=True, exist_ok=True)
             except:
                 # TODO: ADD TO LOG THAT THE PATH CANT BE CREATED
+                self.handle_log_event("The path to download the YOLO repository could not be created.", 0)
                 return False
         return True
 
@@ -103,7 +110,7 @@ class YOLO:
         
         # if the versions is not a key on the versions object list, raise an error
         if(yolo_version not in VERSIONS_REPOS.keys()):
-            raise ValueError(f"YOLO VERSION {yolo_version} NOT FOUND IN THE VERSIONS LIST")
+            self.handle_log_event(f"The provided YOLO version '{yolo_version}' is not available.", 0)
 
         
         # clone the folder in the download path 
@@ -140,8 +147,7 @@ class YOLO:
         """
         super().__init__()
         self.yolo_repo_download_path = yolo_repo_download_path
-        if not self._validate_path(yolo_repo_download_path):
-            raise ValueError("Invalid YOLO repository download path provided.")
+        self._validate_yolo_download_path(yolo_repo_download_path)
 
 
     
