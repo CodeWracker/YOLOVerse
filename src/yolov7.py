@@ -18,7 +18,10 @@ class YOLOv7(YOLO):
 
     def __init__(self, yolo_repo_download_path: str = "yolo_repo") -> None:
         super().__init__(yolo_repo_download_path)
-        
+
+        # donwload the repo git git clone and delete the .git folder
+        self._download_repo('yolov7')
+
 
     # override the method to train
     def train(self, project_name: str, run_name: str, start_weights_path: str, data_yaml_path: str, batch_size: int, num_epochs: int) -> None:

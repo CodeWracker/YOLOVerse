@@ -1,5 +1,8 @@
 # THIS FILE IS REPONSABLE FOR THE FIRST LAYER OF THE YOLO API. HERE THE PADRONIZATION TAKE EFEECT
 
+
+VERSIONS_REPOS = {"yolov7": "https://github.com/WongKinYiu/yolov7"}
+
 import sys
 from pathlib import Path
 # add to path the location of this file
@@ -7,7 +10,7 @@ YOLO_FILE = Path(__file__).resolve()
 ROOT_YOLO_FILE = YOLO_FILE.parents[0]
 if str(ROOT_YOLO_FILE) not in sys.path:
     sys.path.append(str(ROOT_YOLO_FILE))
-    
+import os
 
 
 # abstract base class work
@@ -68,7 +71,7 @@ class BoundingBoxDetection:
     
 
 # Father class of the YOLO API with the main methods (Train, Detect, Resume)
-class YOLO(ABC):
+class YOLO:
     """Represents the YOLO API."""
 
     # ATRIBUTES
@@ -91,23 +94,57 @@ class YOLO(ABC):
                 return False
         return True
 
+    def _download_repo(self, yolo_version: str) -> None:
+        """Downloads the YOLO repository from GitHub.
+
+        Parameters:
+        - yolo_version (str): Version of the YOLO repository to download.
+        """
+        
+        # if the versions is not a key on the versions object list, raise an error
+        if(yolo_version not in VERSIONS_REPOS.keys()):
+            raise ValueError(f"YOLO VERSION {yolo_version} NOT FOUND IN THE VERSIONS LIST")
+
+        
+        # clone the folder in the download path 
+        repo_url = VERSIONS_REPOS[yolo_version]
+        # create a folder with the name of the version
+        version_folder = Path(self.yolo_repo_download_path, yolo_version)
+        # clone the repo
+        os.system(f"git clone {repo_url} {version_folder}")
+        # delete the .git folder inside the folder
+        self._delete_git_folder(version_folder)
+    
+    def _delete_git_folder(self, yolo_version_folder: str) -> None:
+        """Deletes the .git folder inside the YOLO repository folder.
+
+        Parameters:
+        - yolo_version_folder (str): Path to the YOLO repository folder.
+        """
+        git_folder = Path(yolo_version_folder, ".git")
+        if git_folder.exists():
+            sys(f"rm -rf {git_folder}")
+
+        
+
 
     # -------------
-    # ABSTRACT METHODS
+    # PUBLIC METHODS
 
     # initialize the model
-    @abstractmethod
     def __init__(self, yolo_repo_download_path: str) -> None:
         """
         THIS CLASS ONLY CREATES AN UNIFORM API FOR EVERY YOLO IMPLEMENTATION, NOT IMPLEMENTING THE YOLO ITSELF.
         SO, IN ORDER TO USE THIS CLASS, IT NEEDS THE REFERENCE FOR THE ORIGINAL IMPLEMENTATION OF THE YOLO VERSION YOU WANT TO USE.
         THE CORRESPONDENT YOLO WILL BE DOWNLOADED TO THE PATH IN yolo_repo_download_path/{yolo_version} AND WILL BE IMPORTED IN THE CHILDREN WRAPPER CLASS
         """
-        if(not self._validate_path(yolo_repo_download_path)):
-            self.yolo_repo_download_path = yolo_repo_download_path
+        super().__init__()
+        self.yolo_repo_download_path = yolo_repo_download_path
+        if not self._validate_path(yolo_repo_download_path):
+            raise ValueError("Invalid YOLO repository download path provided.")
 
 
-    @abstractmethod
+    
     def train(self, project_name: str, run_name: str, start_weights_path: str, data_yaml_path: str, batch_size: int, num_epochs: int) -> None:
         """Trains the YOLO model.
 
@@ -122,6 +159,4 @@ class YOLO(ABC):
         pass
 
     
-
-
 
