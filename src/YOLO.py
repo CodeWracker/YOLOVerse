@@ -96,10 +96,10 @@ class YOLO(Logger):
     def _validate_yolo_download_path(self, path: str) -> bool:
         """Validates the path."""
         if path is None or path == "":
-            self.handle_log_event("The path parameter to download the YOLO repository is empty.", 0)
+            self.handle_log_event("The path parameter to download the YOLO repository is empty.\nTHIS PACKAGE NEED TO CLONE THE SPECIFIED YOLO REPOSITORY TO USE IT'S CODE.\nTHIS PACKAGE IS JUST A WRAPPER API TO UNIFY THE BEHAVIOR OF ALL YOLOs!!\n!!! -> To fix this error, include the path to the folder where this package can download the wanted yolo code on the constructor of your YOLOvX object: `yolo_repo_download_path` argument (it will create a different subfolder for each version, the path in question is where ALL of the used yolo's will be downloaded) <- !!", 0)
             return False
         if not Path(path).exists():
-            self.handle_log_event("The path to download the YOLO repository does not exist. It will be created.", 2)
+            self.handle_log_event("The path to download the YOLO repository does not exist. It will be created.", 1)
             try:
                 Path(path).mkdir(parents=True, exist_ok=True)
             except:

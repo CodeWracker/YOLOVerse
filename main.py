@@ -1,7 +1,7 @@
 from src.yolov7 import YOLOv7
 from src.logger import Logger
 
-my_model = YOLOv7(verbosity=3)
+my_model = YOLOv7(verbosity=3, yolo_repo_download_path="yolo_repo")
 my_model.train(
     project_name='project_name',
     run_name='run_name',
