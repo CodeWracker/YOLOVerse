@@ -16,8 +16,9 @@ from yolo import YOLO, BoundingBoxDetection
 class YOLOv7(YOLO):
     """This class is a wrapper over the YOLOv7 Implementation, standardizing the API."""
 
-    def __init__(self, yolo_repo_download_path: str = "yolo_repo") -> None:
-        super().__init__(yolo_repo_download_path)
+    def __init__(self, yolo_repo_download_path: str = "yolo_repo", verbosity:int = 0) -> None:
+        super().__init__(yolo_repo_download_path=yolo_repo_download_path, verbosity=verbosity)
+
 
         # donwload the repo git git clone and delete the .git folder
         self._download_repo('yolov7')

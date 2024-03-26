@@ -19,6 +19,15 @@ if str(ROOT_YOLO_FILE) not in sys.path:
     sys.path.append(str(ROOT_YOLO_FILE))
 
 
+# check OS
+if os.name == 'nt':
+    OPERATING_SYSTEM = 'windows'
+elif os.name == 'posix':
+    OPERATING_SYSTEM = 'linux'
+else:
+    OPERATING_SYSTEM = 'unknown'
+
+
 
 class BoundingBoxDetection:
     """Represents the detection of a bounding box in an image."""
@@ -87,19 +96,28 @@ class YOLO(Logger):
     def _validate_yolo_download_path(self, path: str) -> bool:
         """Validates the path."""
         if path is None or path == "":
-            #  TODO: ADD TO LOG THAT THE PATH IS EMPTY
-            self.handle_log_event("The path to download the YOLO repository is empty.", 0)
+            self.handle_log_event("The path parameter to download the YOLO repository is empty.", 0)
             return False
         if not Path(path).exists():
-            # TODO: ADD TO LOG THAT THE PATH DONT EXISTS AND WILL BE CREATED
             self.handle_log_event("The path to download the YOLO repository does not exist. It will be created.", 2)
             try:
                 Path(path).mkdir(parents=True, exist_ok=True)
             except:
-                # TODO: ADD TO LOG THAT THE PATH CANT BE CREATED
                 self.handle_log_event("The path to download the YOLO repository could not be created.", 0)
                 return False
         return True
+
+    def _clone_repo(self, repo_url: str, version_folder:str) -> None:
+        """Clones the YOLO repository from GitHub.
+
+        Parameters:
+        - yolo_version (str): Version of the YOLO repository to clone.
+        """
+        # if the provided path is not empty, download the repo else continue (it assumes that the repo is already downloaded) and log the event
+        if len(os.listdir(self.yolo_repo_download_path)) == 0:
+            os.system(f"git clone {repo_url} {version_folder}")
+        else:
+            self.handle_log_event("The path to download the YOLO repository is not empty. Assuming that it has already been downloaded to the latest version supported.", 1)
 
     def _download_repo(self, yolo_version: str) -> None:
         """Downloads the YOLO repository from GitHub.
@@ -108,7 +126,8 @@ class YOLO(Logger):
         - yolo_version (str): Version of the YOLO repository to download.
         """
         
-        # if the versions is not a key on the versions object list, raise an error
+        # if the versions is not a key on the versions ob
+        # ject list, raise an error
         if(yolo_version not in VERSIONS_REPOS.keys()):
             self.handle_log_event(f"The provided YOLO version '{yolo_version}' is not available.", 0)
 
@@ -118,8 +137,8 @@ class YOLO(Logger):
         # create a folder with the name of the version
         version_folder = Path(self.yolo_repo_download_path, yolo_version)
         # clone the repo
-        os.system(f"git clone {repo_url} {version_folder}")
-        # delete the .git folder inside the folder
+        self._clone_repo(repo_url, version_folder)
+        # # delete the .git folder inside the folder
         self._delete_git_folder(version_folder)
     
     def _delete_git_folder(self, yolo_version_folder: str) -> None:
@@ -130,7 +149,12 @@ class YOLO(Logger):
         """
         git_folder = Path(yolo_version_folder, ".git")
         if git_folder.exists():
-            sys(f"rm -rf {git_folder}")
+            if(OPERATING_SYSTEM == 'windows'):
+                os.system(f"rmdir /s /q {git_folder}")
+            elif(OPERATING_SYSTEM == 'linux'):
+                os.system(f"rm -rf {git_folder}")
+            else:
+                self.handle_log_event("The operating system is not supported.", 0)
 
         
 
@@ -139,13 +163,13 @@ class YOLO(Logger):
     # PUBLIC METHODS
 
     # initialize the model
-    def __init__(self, yolo_repo_download_path: str) -> None:
+    def __init__(self, yolo_repo_download_path: str, verbosity: int = 0) -> None:
         """
         THIS CLASS ONLY CREATES AN UNIFORM API FOR EVERY YOLO IMPLEMENTATION, NOT IMPLEMENTING THE YOLO ITSELF.
         SO, IN ORDER TO USE THIS CLASS, IT NEEDS THE REFERENCE FOR THE ORIGINAL IMPLEMENTATION OF THE YOLO VERSION YOU WANT TO USE.
         THE CORRESPONDENT YOLO WILL BE DOWNLOADED TO THE PATH IN yolo_repo_download_path/{yolo_version} AND WILL BE IMPORTED IN THE CHILDREN WRAPPER CLASS
         """
-        super().__init__()
+        super().__init__(verbosity = verbosity)
         self.yolo_repo_download_path = yolo_repo_download_path
         self._validate_yolo_download_path(yolo_repo_download_path)
 

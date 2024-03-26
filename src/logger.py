@@ -15,14 +15,14 @@ LOG_TYPES = ["ERROR", "WARNING", "INFO", "DEBUG"]
 
 
 class Log:
-    def __init__(self, event, type):
+    def __init__(self, event:int, type:int):
         self.event = event
         self.type = type
     def __str__(self):
         return f'{LOG_TYPES[self.type]}: {self.event}'
 
 class Logger:
-    def __init__(self, verbosity=0, save_file_path=None):
+    def __init__(self, verbosity: int=0, save_file_path:str=None):
         """Initializes the logger with a verbosity level.
         
         Args:
@@ -49,7 +49,7 @@ class Logger:
         else:
             self.save_file_path = None
     
-    def _validate_path(self, path):
+    def _validate_path(self, path:str):
         """Validates the path to save the log file."""
         
         # try to create the file
@@ -61,7 +61,7 @@ class Logger:
         
         return True
 
-    def _validate_verbosity(self, verbosity):
+    def _validate_verbosity(self, verbosity:int):
         """Validates the verbosity level."""
         return verbosity in range(len(LOG_TYPES))
 
@@ -71,7 +71,7 @@ class Logger:
     def get_log_verbose_definition():
         return LOG_TYPES
     
-    def handle_log_event(self, event, type):
+    def handle_log_event(self, event:str, type:int):
         """Handles an event by logging it.
         
         Args:
