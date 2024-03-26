@@ -1,0 +1,4 @@
+DEBUG: An event happened
+INFO: Another event happened
+WARNING: Yet another event happened
+ERROR: One more event happened
