@@ -107,7 +107,7 @@ class YOLO(Logger):
                 return False
         return True
 
-    def _clone_repo(self, repo_url: str, version_folder:str) -> None:
+    def _clone_repo(self, repo_url: str, ) -> None:
         """Clones the YOLO repository from GitHub.
 
         Parameters:
@@ -115,9 +115,12 @@ class YOLO(Logger):
         """
         # if the provided path is not empty, download the repo else continue (it assumes that the repo is already downloaded) and log the event
         if len(os.listdir(self.yolo_repo_download_path)) == 0:
-            os.system(f"git clone {repo_url} {version_folder}")
+            os.system(f"git clone {repo_url} {self.version_folder}")
         else:
             self.handle_log_event("The path to download the YOLO repository is not empty. Assuming that it has already been downloaded to the latest version supported.", 1)
+        
+        # add the path to the sys.path
+        sys.path.append(str(self.version_folder))
 
     def _download_repo(self, yolo_version: str) -> None:
         """Downloads the YOLO repository from GitHub.
@@ -135,19 +138,19 @@ class YOLO(Logger):
         # clone the folder in the download path 
         repo_url = VERSIONS_REPOS[yolo_version]
         # create a folder with the name of the version
-        version_folder = Path(self.yolo_repo_download_path, yolo_version)
+        self.version_folder = Path(self.yolo_repo_download_path, yolo_version)
         # clone the repo
-        self._clone_repo(repo_url, version_folder)
+        self._clone_repo(repo_url)
         # # delete the .git folder inside the folder
-        self._delete_git_folder(version_folder)
+        self._delete_git_folder()
     
-    def _delete_git_folder(self, yolo_version_folder: str) -> None:
+    def _delete_git_folder(self) -> None:
         """Deletes the .git folder inside the YOLO repository folder.
 
         Parameters:
         - yolo_version_folder (str): Path to the YOLO repository folder.
         """
-        git_folder = Path(yolo_version_folder, ".git")
+        git_folder = Path(self.version_folder, ".git")
         if git_folder.exists():
             if(OPERATING_SYSTEM == 'windows'):
                 os.system(f"rmdir /s /q {git_folder}")

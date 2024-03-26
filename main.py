@@ -10,9 +10,3 @@ my_model.train(
     batch_size=8,
     num_epochs=100
 )
-
-# logger = Logger(verbosity=3)
-# logger.handle_event('An event happened', 3)
-# logger.handle_event('Another event happened', 2)
-# logger.handle_event('Yet another event happened', 1)
-# logger.handle_event('One more event happened', 0)

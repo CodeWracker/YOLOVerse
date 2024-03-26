@@ -81,7 +81,7 @@ class Logger:
         
         # check if the type is valid
         if type not in range(len(LOG_TYPES)):
-            self.handle_event(f'Type {type} is not valid for event: {event}', 0)
+            self.handle_log_event(f'Type {type} is not valid for event: {event}', 0)
         
         # check if the type is within the verbosity level
         if type > self.verbosity:
