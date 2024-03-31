@@ -15,13 +15,38 @@ if str(ROOT_YOLOV7_FILE) not in sys.path:
 
 
 from yolo import YOLO, BoundingBoxDetection
+from logger import Logger
+
+
+class YOLOv7Options(dict):
+    """A class to represent the options of the YOLOv7 model."""
+
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def __getattr__(self, item):
+        try:
+            return self[item]
+        except KeyError:
+            raise AttributeError(f"'YOLOv7Options' object has no attribute '{item}'")
+            
+    
+    def __setattr__(self, key, value):
+        self[key] = value
+    
+    def __delattr__(self, item):
+        try:
+            del self[item]
+        except KeyError:
+            raise AttributeError(f"'YOLOv7Options' object has no attribute '{item}'")
+            
 
 
 class YOLOv7(YOLO):
     """This class is a wrapper over the YOLOv7 Implementation, standardizing the API."""
 
-    def __init__(self, yolo_repo_download_path: str = None, verbosity:int = 0, force_gpu:bool = False) -> None:
-        super().__init__(yolo_repo_download_path=yolo_repo_download_path, verbosity=verbosity, force_gpu=force_gpu)
+    def __init__(self, yolo_repo_download_path: str = None, verbosity:int = 0) -> None:
+        super().__init__(yolo_repo_download_path=yolo_repo_download_path, verbosity=verbosity)
 
 
         # donwload the repo git git clone and delete the .git folder
@@ -29,71 +54,141 @@ class YOLOv7(YOLO):
         # self._setup()
 
     # override the method to train
-    def train(self, project_name: str, run_name: str, start_weights_path: str, data_yaml_path: str, batch_size: int, num_epochs: int) -> None:
+    def train(
+            self,
+            project_name: str,
+            run_name: str,
+            weights: str,
+            data: str,
+            batch_size: int,
+            num_epochs: int,
+            device: int,
+            cfg: str = "",
+            hyp: str = "",
+            img_size: list = [640,640],
+            resume: bool = False,
+            no_save: bool = False,
+            no_test: bool = False,
+            no_autoanchor: bool = False,
+            evolve: bool = False,
+            bucket: str = "",
+            cache_images: bool = False,
+            image_weights: bool = False,
+            multi_scale: bool = False,
+            single_cls: bool = False,
+            adam: bool = False,
+            sync_bn: bool = False,
+            workers: int = 8,
+            entity: str = None,
+            exist_ok: bool = False,
+            quad: bool = False,
+            linear_lr: bool = False,
+            label_smoothing: float = 0.0,
+            upload_dataset: bool = False,
+            bbox_interval: int = -1,
+            save_period: int = -1,
+            artifact_alias: str = "latest",
+            freeze: list = [0],
+            v5_metric: bool = False,
+            rect: bool = False,
+
+    ) -> None:
         # import the necessarie dependencies
         self.handle_log_event("Importing the necessary dependencies.", 2)
 
         # train the model
         self.handle_log_event("Training the model.", 3)
-        cmd = f"python {self.version_folder}/train.py"
-        if project_name:
-            cmd += f" --project {project_name}"
-        if run_name:
-            cmd += f" --name {run_name}"
-        if start_weights_path:
-            # check if the file exists
-            if not Path(start_weights_path).exists():
-                self.handle_log_event(f"File {start_weights_path} does not exist! It should be the path to a .pt file", 0)
-            cmd += f' --weights "{start_weights_path}"'
-        else:
-            self.handle_log_event("No start weights provided!",0)
-        if data_yaml_path:
-            # check if the file exists
-            if not Path(data_yaml_path).exists():
-                self.handle_log_event(f"File {data_yaml_path} does not exist! It should be the path to a .yaml file", 0)
-            
-            # open the file and check if it has the necessary fields (train, val, test) and check if those filds hold a existent path
-            with open(data_yaml_path, 'r') as stream:
-                data = yaml.safe_load(stream)
-                if not data:
-                    self.handle_log_event(f"File {data_yaml_path} is empty!", 0)
-                if 'train' not in data:
-                    self.handle_log_event(f"Field 'train' not found in the file {data_yaml_path}!", 0)
-                if 'val' not in data:
-                #     self.handle_log_event(f"Field 'val' not found in the file {data_yaml_path}!", 0)
-                # if 'test' not in data:
-                    self.handle_log_event(f"Field 'test' not found in the file {data_yaml_path}!", 0)
-                if not Path(data['train']).exists():
-                    self.handle_log_event(f"Path {data['train']} does not exist!", 0)
-                if not Path(data['val']).exists():
-                    self.handle_log_event(f"Path {data['val']} does not exist!", 0)
-                # if not Path(data['test']).exists():
-                #     self.handle_log_event(f"Path {data['test']} does not exist!", 0)
 
-            cmd += f' --data "{data_yaml_path}"'
-        else:
-            self.handle_log_event("No data yaml path provided!",0)
-        if batch_size:
-            cmd += f" --batch-size {batch_size}"
-        if num_epochs:
-            cmd += f" --epochs {num_epochs}"
+        options = YOLOv7Options()
+        
 
-        if torch.cuda.is_available():
+        # check if the parameters are valid
+
+        if not self._validate_start_weights_path(weights):
+            self.handle_log_event(f"A problem ocurred while validating your start weights path: {weights}", 0)
+        options.weights = weights
+
+        if not self._validate_yaml_file(data):
+            self.handle_log_event(f"A problem ocurred while validating your YAML file path: {data}", 0)
+        options.data = data
+
+        if device != 0:
+            options.device = 'cpu'
+        else:
+            options.device = '0'
+
+        options.cfg = cfg
+        if hyp == "":
+            options.hyp = f"{self.version_folder}/data/hyp.scratch.p5.yaml"
+        else:
+            options.hyp = hyp
+        options.batch_size = batch_size
+        options.total_batch_size = batch_size
+        options.epochs = num_epochs
+        options.project = project_name
+        options.name = run_name
+        options.img_size = img_size
+        options.resume = resume
+        options.exist_ok = exist_ok
+        options.multi_scale = multi_scale
+        options.single_cls = single_cls
+        options.adam = adam
+        options.sync_bn = sync_bn
+        options.workers = workers
+        options.entity = entity
+        options.quad = quad
+        options.linear_lr = linear_lr
+        options.label_smoothing = label_smoothing
+        options.upload_dataset = upload_dataset
+        options.bbox_interval = bbox_interval
+        options.save_period = save_period
+        options.artifact_alias = artifact_alias
+        options.freeze = freeze
+        options.v5_metric = v5_metric
+        options.nosave = no_save
+        options.notest = no_test
+        options.noautoanchor = no_autoanchor
+        options.evolve = evolve
+        options.bucket = bucket
+        options.cache_images = cache_images
+        options.image_weights = image_weights
+        options.rect = rect
+        
+        options.world_size = int(os.environ['WORLD_SIZE']) if 'WORLD_SIZE' in os.environ else 1
+        options.global_rank = int(os.environ['RANK']) if 'RANK' in os.environ else -1
+
+        if options.device == 0:
             # if cuda is available, train with the gpu
-            self.handle_log_event("cuda is available", 2)
-            cmd += " --device 0"
+            if torch.cuda.is_available():
+                self.handle_log_event("cuda is available", 2)
+            else:
+                self.handle_log_event("cuda is not available", 0)
 
-            self.handle_log_event(f"Command to train the model: {cmd}", 3)
-            if(os.system(cmd) != 0):
-                self.handle_log_event(f"Error while training the model", 0)
+        # train the model
+        # include to path the path of the repo
+        sys.path.append(self.version_folder)
+        from yolo_repo.yolov7.train import train as yolov7_train
+        from yolo_repo.yolov7.utils.general import increment_path
+        from yolo_repo.yolov7.utils.torch_utils import select_device
+
+        self.handle_log_event(f"Loading the hyperparameters from: {options.hyp}", 3)
+        with open(options.hyp) as f:
+            hyp_yaml = yaml.load(f, Loader=yaml.FullLoader)
+
+
+        if hyp_yaml is None:
+            self.handle_log_event(f"A problem ocurred while loading the hyperparameters: {options.hyp}", 0)
+
+        device = select_device(options.device, batch_size=options.batch_size)
+
+
+        if options.resume:
+            self.handle_log_event("Resuming a training is not supported yet.", 0)
         else:
-            # if cuda is not available, train with the cpu
-            if(self.force_gpu):
-                self.handle_log_event("cuda is not available and `force_gpu` is present. Will not use CPU to train! Please check if your CUDA version is 11.8: https://developer.nvidia.com/cuda-11-8-0-download-archive", 0)
-            self.handle_log_event("cuda is not available", 1)
-            self.handle_log_event(f"Command to train the model: {cmd}", 3)
-            if(os.system(cmd) != 0):
-                self.handle_log_event(f"Error while training the model", 0)
+            options.save_dir = increment_path(Path(options.project) / options.name, exist_ok=options.exist_ok)
+            yolov7_train(hyp_yaml, options, device, None)
+
+
 
         return  
     

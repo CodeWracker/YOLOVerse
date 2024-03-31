@@ -1,6 +1,8 @@
 # THIS FILE IS REPONSABLE FOR THE FIRST LAYER OF THE YOLO API. HERE THE PADRONIZATION TAKE EFEECT
 
 
+
+
 VERSIONS_REPOS = {"yolov7": "https://github.com/WongKinYiu/yolov7"}
 
 import sys
@@ -8,6 +10,7 @@ import os
 from pathlib import Path
 # abstract base class work
 from abc import ABC, abstractmethod
+import yaml
 
 
 from logger import Logger
@@ -158,7 +161,58 @@ class YOLO(Logger):
                 os.system(f"rm -rf {git_folder}")
             else:
                 self.handle_log_event("The operating system is not supported.", 0)
+    
+    def _validate_yaml_file(self, data_yaml_path: str) -> bool:
+        """Validates the data.yaml file.
 
+        Parameters:
+        - data_yaml_path (str): Path to the data.yaml file.
+        """
+        # check if the file exists
+        if not Path(data_yaml_path).exists():
+            self.handle_log_event(f"File {data_yaml_path} does not exist! It should be the path to a .yaml file", 0)
+            return False
+        
+        # open the file and check if it has the necessary fields (train, val, test) and check if those filds hold a existent path
+        with open(data_yaml_path, 'r') as stream:
+            data = yaml.safe_load(stream)
+            if not data:
+                self.handle_log_event(f"File {data_yaml_path} is empty!", 0)
+                return False
+            if 'train' not in data:
+                self.handle_log_event(f"Field 'train' not found in the file {data_yaml_path}!", 0)
+                return False
+            if 'val' not in data:
+                self.handle_log_event(f"Field 'val' not found in the file {data_yaml_path}!", 0)
+                return False
+            # if 'test' not in data:
+            #     self.handle_log_event(f"Field 'test' not found in the file {data_yaml_path}!", 1)
+            #     return False
+            if not Path(data['train']).exists():
+                self.handle_log_event(f"Path {data['train']} does not exist!", 0)
+                return False
+            if not Path(data['val']).exists():
+                self.handle_log_event(f"Path {data['val']} does not exist!", 0)
+                return False
+            # if not Path(data['test']).exists():
+            #     self.handle_log_event(f"Path {data['test']} does not exist!", 0)
+            #     return False
+        return True
+
+    def _validate_start_weights_path(self, start_weights_path: str) -> bool:
+        """Validates the start weights path.
+
+        Parameters:
+        - start_weights_path (str): Path to the initial weights file (.pt).
+        """
+        if not Path(start_weights_path).exists():
+            self.handle_log_event(f"File {start_weights_path} does not exist! It should be the path to a .pt file", 0)
+            return False
+        # checks if there is a .pt file in the path
+        if not Path(start_weights_path).is_file():
+            self.handle_log_event(f"File {start_weights_path} is not a file!", 0)
+            return False
+        return True
         
 
 
@@ -166,7 +220,7 @@ class YOLO(Logger):
     # PUBLIC METHODS
 
     # initialize the model
-    def __init__(self, yolo_repo_download_path: str, verbosity: int = 0, force_gpu:bool = False) -> None:
+    def __init__(self, yolo_repo_download_path: str, verbosity: int = 0) -> None:
         """
         THIS CLASS ONLY CREATES AN UNIFORM API FOR EVERY YOLO IMPLEMENTATION, NOT IMPLEMENTING THE YOLO ITSELF.
         SO, IN ORDER TO USE THIS CLASS, IT NEEDS THE REFERENCE FOR THE ORIGINAL IMPLEMENTATION OF THE YOLO VERSION YOU WANT TO USE.
@@ -175,20 +229,90 @@ class YOLO(Logger):
         super().__init__(verbosity = verbosity)
         self.yolo_repo_download_path = yolo_repo_download_path
         self._validate_yolo_download_path(yolo_repo_download_path)
-        self.force_gpu = force_gpu
 
 
     
-    def train(self, project_name: str, run_name: str, start_weights_path: str, data_yaml_path: str, batch_size: int, num_epochs: int) -> None:
-        """Trains the YOLO model.
+    def train(
+            self,
+            project_name: str,
+            run_name: str,
+            weights: str,
+            data: str,
+            batch_size: int,
+            num_epochs: int,
+            device: int,
+            cfg: str = "",
+            hyp: str = "",
+            img_size: list = [640,640],
+            resume: bool = False,
+            no_save: bool = False,
+            no_test: bool = False,
+            no_autoanchor: bool = False,
+            evolve: bool = False,
+            bucket: str = "",
+            cache_images: bool = False,
+            image_weights: bool = False,
+            multi_scale: bool = False,
+            single_cls: bool = False,
+            adam: bool = False,
+            sync_bn: bool = False,
+            workers: int = 8,
+            entity: str = None,
+            exist_ok: bool = False,
+            quad: bool = False,
+            linear_lr: bool = False,
+            label_smoothing: float = 0.0,
+            upload_dataset: bool = False,
+            bbox_interval: int = -1,
+            save_period: int = -1,
+            artifact_alias: str = "latest",
+            freeze: list = [0],
+            v5_metric: bool = False,
+            rect: bool = False,
 
+    ) -> None:
+        """Trains the YOLO model.
+        
         Parameters:
-        - project_name (str): Name of the project. Models will be saved to 'project_name/run_name'.
-        - run_name (str): Name of the run. Models will be saved to 'project_name/run_name'.
-        - start_weights_path (str): Path to the initial weights file (.pt).
-        - data_yaml_path (str): Path to the data.yaml file.
-        - batch_size (int): Batch size used during training.
-        - num_epochs (int): Number of epochs for training.
+        - [M] project_name (str): Name of the project. Models will be saved to 'project_name/run_name'.
+        - [M] run_name (str): Name of the run. Models will be saved to 'project_name/run_name'.
+        - [M] weights (str): Path to the initial weights file (.pt).
+        - [M] data (str): Path to the data.yaml file.
+        - [M] batch_size (int): Batch size used during training.
+        - [M] num_epochs (int): Number of epochs for training.
+        - [M] device (int): Device to use for training (0 for GPU, -1 for CPU).
+        - [O] cfg (str): Model.yaml path for config options.
+        - [O] hyp (str): Hyperparameters path.
+        - [O] img_size (list): Image size for training.
+        - [O] resume (bool): Resume training from last.pt.
+        - [O] no_save (bool): Only save the final checkpoint.
+        - [O] no_test (bool): Only test the final epoch.
+        - [O] no_autoanchor (bool): Disable autoanchor check.
+        - [O] evolve (bool): Evolve hyperparameters.
+        - [O] bucket (str): gsutil bucket.
+        - [O] cache_images (bool): Cache images for faster training.
+        - [O] image_weights (bool): Use weighted image selection for training.
+        - [O] multi_scale (bool): Vary img-size +/- 50%.
+        - [O] single_cls (bool): Train multi-class data as single-class.
+        - [O] adam (bool): Use torch.optim.Adam() optimizer.
+        - [O] sync_bn (bool): Use SyncBatchNorm, only available in DDP mode.
+        - [O] workers (int): Maximum number of dataloader workers.
+        - [O] entity (str): W&B entity.
+        - [O] exist_ok (bool): If there is an existing project/name it will overwrite it, otherwise it will increment the number and create a new folder.
+        - [O] quad (bool): Quad dataloader.
+        - [O] linear_lr (bool): Linear LR.
+        - [O] label_smoothing (float): Label smoothing epsilon.
+        - [O] upload_dataset (bool): Upload dataset as W&B artifact table.
+        - [O] bbox_interval (int): Set bounding-box image logging interval for W&B.
+        - [O] save_period (int): Log model after every "save_period" epoch.
+        - [O] artifact_alias (str): Version of dataset artifact to be used.
+        - [O] freeze (list): Freeze layers: backbone of yolov7=50, first3=0 1 2.
+        - [O] v5_metric (bool): Assume maximum recall as 1.0 in AP calculation.
+        - [O] rect (bool): Rectangular training.
+
+        
+
+
         """
         pass
 
