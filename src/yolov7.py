@@ -14,31 +14,11 @@ if str(ROOT_YOLOV7_FILE) not in sys.path:
 
 
 
-from yolo import YOLO, BoundingBoxDetection
+from yolo import YOLO, YOLOOptions
 from logger import Logger
 
 
-class YOLOv7Options(dict):
-    """A class to represent the options of the YOLOv7 model."""
 
-    def __init__(self) -> None:
-        super().__init__()
-    
-    def __getattr__(self, item):
-        try:
-            return self[item]
-        except KeyError:
-            raise AttributeError(f"'YOLOv7Options' object has no attribute '{item}'")
-            
-    
-    def __setattr__(self, key, value):
-        self[key] = value
-    
-    def __delattr__(self, item):
-        try:
-            del self[item]
-        except KeyError:
-            raise AttributeError(f"'YOLOv7Options' object has no attribute '{item}'")
             
 
 
@@ -99,7 +79,7 @@ class YOLOv7(YOLO):
         # train the model
         self.handle_log_event("Training the model.", 3)
 
-        options = YOLOv7Options()
+        options = YOLOOptions()
         
 
         # check if the parameters are valid

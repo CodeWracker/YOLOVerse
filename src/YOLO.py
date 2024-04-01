@@ -86,6 +86,28 @@ class BoundingBoxDetection:
         return future_center[0] - current_center[0], future_center[1] - current_center[1]
     
 
+class YOLOOptions(dict):
+    """A class to represent the options of the YOLOv7 model."""
+
+    def __init__(self) -> None:
+        super().__init__()
+    
+    def __getattr__(self, item):
+        try:
+            return self[item]
+        except KeyError:
+            raise AttributeError(f"'YOLOOptions' object has no attribute '{item}'")
+            
+    
+    def __setattr__(self, key, value):
+        self[key] = value
+    
+    def __delattr__(self, item):
+        try:
+            del self[item]
+        except KeyError:
+            raise AttributeError(f"'YOLOOptions' object has no attribute '{item}'")
+
 # Father class of the YOLO API with the main methods (Train, Detect, Resume)
 class YOLO(Logger):
     """Represents the YOLO API."""
