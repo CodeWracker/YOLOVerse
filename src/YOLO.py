@@ -3,7 +3,10 @@
 
 
 
-VERSIONS_REPOS = {"yolov7": "https://github.com/CodeWracker/yolov7"}
+VERSIONS_REPOS = {
+    "yolov7": "https://github.com/CodeWracker/yolov7",
+    "yolov5": "https://github.com/CodeWracker/yolov5"
+    }
 
 import sys
 import os
@@ -132,17 +135,21 @@ class YOLO(Logger):
                 return False
         return True
 
-    def _clone_repo(self, repo_url: str, ) -> None:
+    def _clone_repo(self, repo_url: str, yolo_version:str ) -> None:
         """Clones the YOLO repository from GitHub.
 
         Parameters:
         - yolo_version (str): Version of the YOLO repository to clone.
         """
-        # if the provided path is not empty, download the repo else continue (it assumes that the repo is already downloaded) and log the event
-        if len(os.listdir(self.yolo_repo_download_path)) == 0:
-            os.system(f"git clone {repo_url} {self.version_folder}")
+
+        self.handle_log_event(f"Cloning the YOLO repository '{yolo_version}' from '{repo_url}' to '{self.version_folder}'...", 2)
+
+        # if there is a folder inside the path with the same name of the version, assumes that it has alread been downloaded to the latest version and just ghoes on loggin an warning
+        if Path(self.version_folder).exists():
+            self.handle_log_event(f"The YOLO version '{yolo_version}' has already been downloaded to the path '{self.version_folder}'.", 1)
         else:
-            self.handle_log_event("The path to download the YOLO repository is not empty. Assuming that it has already been downloaded to the latest version supported.", 1)
+            os.system(f"git clone {repo_url} {self.version_folder}")
+
         
         # add the path to the sys.path
         sys.path.append(str(self.version_folder))
@@ -165,7 +172,7 @@ class YOLO(Logger):
         # create a folder with the name of the version
         self.version_folder = Path(self.yolo_repo_download_path, yolo_version)
         # clone the repo
-        self._clone_repo(repo_url)
+        self._clone_repo(repo_url, yolo_version)
         # # delete the .git folder inside the folder
         self._delete_git_folder()
     
@@ -266,32 +273,9 @@ class YOLO(Logger):
             cfg: str = "",
             hyp: str = "",
             img_size: list = [640,640],
-            resume: bool = False,
             no_save: bool = False,
             no_test: bool = False,
-            no_autoanchor: bool = False,
-            evolve: bool = False,
-            bucket: str = "",
-            cache_images: bool = False,
-            image_weights: bool = False,
-            multi_scale: bool = False,
-            single_cls: bool = False,
-            adam: bool = False,
-            sync_bn: bool = False,
-            workers: int = 8,
-            entity: str = None,
-            exist_ok: bool = False,
-            quad: bool = False,
-            linear_lr: bool = False,
-            label_smoothing: float = 0.0,
-            upload_dataset: bool = False,
-            bbox_interval: int = -1,
-            save_period: int = -1,
-            artifact_alias: str = "latest",
-            freeze: list = [0],
-            v5_metric: bool = False,
-            rect: bool = False,
-
+            exist_ok: bool = False
     ) -> None:
         """Trains the YOLO model.
         
@@ -306,31 +290,9 @@ class YOLO(Logger):
         - [O] cfg (str): Model.yaml path for config options.
         - [O] hyp (str): Hyperparameters path.
         - [O] img_size (list): Image size for training.
-        - [O] resume (bool): Resume training from last.pt.
         - [O] no_save (bool): Only save the final checkpoint.
         - [O] no_test (bool): Only test the final epoch.
-        - [O] no_autoanchor (bool): Disable autoanchor check.
-        - [O] evolve (bool): Evolve hyperparameters.
-        - [O] bucket (str): gsutil bucket.
-        - [O] cache_images (bool): Cache images for faster training.
-        - [O] image_weights (bool): Use weighted image selection for training.
-        - [O] multi_scale (bool): Vary img-size +/- 50%.
-        - [O] single_cls (bool): Train multi-class data as single-class.
-        - [O] adam (bool): Use torch.optim.Adam() optimizer.
-        - [O] sync_bn (bool): Use SyncBatchNorm, only available in DDP mode.
-        - [O] workers (int): Maximum number of dataloader workers.
-        - [O] entity (str): W&B entity.
-        - [O] exist_ok (bool): If there is an existing project/name it will overwrite it, otherwise it will increment the number and create a new folder.
-        - [O] quad (bool): Quad dataloader.
-        - [O] linear_lr (bool): Linear LR.
-        - [O] label_smoothing (float): Label smoothing epsilon.
-        - [O] upload_dataset (bool): Upload dataset as W&B artifact table.
-        - [O] bbox_interval (int): Set bounding-box image logging interval for W&B.
-        - [O] save_period (int): Log model after every "save_period" epoch.
-        - [O] artifact_alias (str): Version of dataset artifact to be used.
-        - [O] freeze (list): Freeze layers: backbone of yolov7=50, first3=0 1 2.
-        - [O] v5_metric (bool): Assume maximum recall as 1.0 in AP calculation.
-        - [O] rect (bool): Rectangular training.
+        - [O] exist_ok (bool): Existing project/name ok, do not increment.
 
         
 
