@@ -3,7 +3,7 @@
 
 
 
-VERSIONS_REPOS = {"yolov7": "https://github.com/WongKinYiu/yolov7"}
+VERSIONS_REPOS = {"yolov7": "https://github.com/CodeWracker/yolov7"}
 
 import sys
 import os
