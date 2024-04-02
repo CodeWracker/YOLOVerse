@@ -6,15 +6,10 @@ import os
 import torch
 import yaml
 
-# add to path the location of this file
-YOLOV7_FILE = Path(__file__).resolve()
-ROOT_YOLOV7_FILE = YOLOV7_FILE.parents[0]
-if str(ROOT_YOLOV7_FILE) not in sys.path:
-    sys.path.append(str(ROOT_YOLOV7_FILE))
 
 
 
-from yolo import YOLO, YOLOOptions
+from src.yolo import YOLO, YOLOOptions,temporary_sys_path_addition
 
 
 class YOLOv7(YOLO):
@@ -109,29 +104,31 @@ class YOLOv7(YOLO):
                 self.handle_log_event("cuda is not available", 0)
 
         # train the model
-        # include to path the path of the repo
-        sys.path.append(self.version_folder)
-        from yolo_repo.yolov7.train import train as yolov7_train
-        from yolo_repo.yolov7.utils.general import increment_path
-        from yolo_repo.yolov7.utils.torch_utils import select_device
+         
 
-        self.handle_log_event(f"Loading the hyperparameters from: {options.hyp}", 3)
-        with open(options.hyp) as f:
-            hyp_yaml = yaml.load(f, Loader=yaml.FullLoader)
-        if hyp_yaml is None:
-            self.handle_log_event(f"A problem ocurred while loading the hyperparameters: {options.hyp}", 0)
+        with temporary_sys_path_addition(self.version_folder):
+            self.handle_log_event(f'The path now is: {sys.path}', 1)
 
-        device = select_device(options.device, batch_size=options.batch_size)
+            from yolo_repo.yolov7.train import train as yolov7_train
+            from yolo_repo.yolov7.utils.general import increment_path
+            from yolo_repo.yolov7.utils.torch_utils import select_device
+
+            self.handle_log_event(f"Loading the hyperparameters from: {options.hyp}", 3)
+            with open(options.hyp) as f:
+                hyp_yaml = yaml.load(f, Loader=yaml.FullLoader)
+            if hyp_yaml is None:
+                self.handle_log_event(f"A problem ocurred while loading the hyperparameters: {options.hyp}", 0)
+
+            device = select_device(options.device, batch_size=options.batch_size)
 
 
-        if options.resume:
-            self.handle_log_event("Resuming a training is not supported yet.", 0)
-        else:
-            options.save_dir = increment_path(Path(options.project) / options.name, exist_ok=options.exist_ok)
-            # train the model
-            self.handle_log_event("Training the model.", 3)
-            yolov7_train(hyp_yaml, options, device, None)
-
+            if options.resume:
+                self.handle_log_event("Resuming a training is not supported yet.", 0)
+            else:
+                options.save_dir = increment_path(Path(options.project) / options.name, exist_ok=options.exist_ok)
+                # train the model
+                self.handle_log_event("Training the model.", 3)
+                yolov7_train(hyp_yaml, options, device, None)
 
 
         return  

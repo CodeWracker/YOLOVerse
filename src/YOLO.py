@@ -14,15 +14,10 @@ from pathlib import Path
 # abstract base class work
 from abc import ABC, abstractmethod
 import yaml
+from contextlib import contextmanager
 
 
-from logger import Logger
-
-# add to path the location of this file
-YOLO_FILE = Path(__file__).resolve()
-ROOT_YOLO_FILE = YOLO_FILE.parents[0]
-if str(ROOT_YOLO_FILE) not in sys.path:
-    sys.path.append(str(ROOT_YOLO_FILE))
+from src.logger import Logger
 
 
 # check OS
@@ -33,6 +28,18 @@ elif os.name == 'posix':
 else:
     OPERATING_SYSTEM = 'unknown'
 
+
+@contextmanager
+def temporary_sys_path_addition(path):
+    """
+    A context manager that temporarily adds a path to sys.path
+    and removes it upon exiting the context.
+    """
+    try:
+        sys.path.append(str(path))
+        yield
+    finally:
+        sys.path.remove(str(path))
 
 
 class BoundingBoxDetection:
@@ -126,6 +133,12 @@ class YOLO(Logger):
         if path is None or path == "":
             self.handle_log_event("The path parameter to download the YOLO repository is empty.\nTHIS PACKAGE NEED TO CLONE THE SPECIFIED YOLO REPOSITORY TO USE IT'S CODE.\nTHIS PACKAGE IS JUST A WRAPPER API TO UNIFY THE BEHAVIOR OF ALL YOLOs!!\n!!! -> To fix this error, include the path to the folder where this package can download the wanted yolo code on the constructor of your YOLOvX object: `yolo_repo_download_path` argument (it will create a different subfolder for each version, the path in question is where ALL of the used yolo's will be downloaded) <- !!", 0)
             return False
+        
+        # checks if is a absolute path
+        if not Path(path).is_absolute():
+            self.handle_log_event("The path to download the YOLO repository is not an absolute path.", 0)
+            return False
+
         if not Path(path).exists():
             self.handle_log_event("The path to download the YOLO repository does not exist. It will be created.", 1)
             try:
@@ -151,8 +164,6 @@ class YOLO(Logger):
             os.system(f"git clone {repo_url} {self.version_folder}")
 
         
-        # add the path to the sys.path
-        sys.path.append(str(self.version_folder))
 
     def _download_repo(self, yolo_version: str) -> None:
         """Downloads the YOLO repository from GitHub.

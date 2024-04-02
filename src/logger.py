@@ -3,13 +3,6 @@ from pathlib import Path
 
 
 
-# add to path the location of this file
-LOGGER_FILE = Path(__file__).resolve()
-ROOT_LOGGER_FILE = LOGGER_FILE.parents[0]
-if str(ROOT_LOGGER_FILE) not in os.sys.path:
-    os.sys.path.append(str(ROOT_LOGGER_FILE))
-
-
 
 LOG_TYPES = ["ERROR", "WARNING", "INFO", "DEBUG"]
 

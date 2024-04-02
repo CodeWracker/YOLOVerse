@@ -6,14 +6,10 @@ import os
 import torch
 import yaml
 
-# add to path the location of this file
-YOLOV5_FILE = Path(__file__).resolve()
-ROOT_YOLOV5_FILE = YOLOV5_FILE.parents[0]
-if str(ROOT_YOLOV5_FILE) not in sys.path:
-    sys.path.append(str(ROOT_YOLOV5_FILE))
 
 
-from yolo import YOLO, YOLOOptions
+
+from src.yolo import YOLO, YOLOOptions, temporary_sys_path_addition
 
 class YOLOv5(YOLO):
     """This class is a wrapper over the YOLOv5 Implementation, standardizing the API."""
@@ -104,14 +100,22 @@ class YOLOv5(YOLO):
         else:
             self.handle_log_event("CUDA is available.", 2)
 
-        # train the model
-        sys.path.append(self.version_folder)
-        from yolo_repo.yolov5.train import train as yolov5_train
-        from yolo_repo.yolov5.utils.torch_utils import select_device
-        from yolo_repo.yolov5.utils.callbacks import Callbacks
-        from yolo_repo.yolov5.utils.general import increment_path
-        device = select_device(options.device, batch_size=options.batch_size)
-        options.save_dir = str(increment_path(Path(options.project) / options.name, exist_ok=options.exist_ok))
-        callbacks = Callbacks()
-        self.handle_log_event(f"Loading the hyperparameters from: {options.hyp}", 3)
-        yolov5_train(options.hyp, options, device, callbacks)
+
+        
+
+        with temporary_sys_path_addition(self.version_folder):
+            from yolo_repo.yolov5.train import train as yolov5_train
+            from yolo_repo.yolov5.utils.torch_utils import select_device
+            from yolo_repo.yolov5.utils.callbacks import Callbacks
+            from yolo_repo.yolov5.utils.general import increment_path
+            device = select_device(options.device, batch_size=options.batch_size)
+            options.save_dir = str(increment_path(Path(options.project) / options.name, exist_ok=options.exist_ok))
+            callbacks = Callbacks()
+            self.handle_log_event(f"Loading the hyperparameters from: {options.hyp}", 3)
+
+            
+
+            
+            yolov5_train(options.hyp, options, device, callbacks)
+
+        return
