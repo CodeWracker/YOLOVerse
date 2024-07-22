@@ -272,6 +272,10 @@ class YOLO(Logger):
         self.yolo_repo_download_path = yolo_repo_download_path
         self._validate_yolo_download_path(yolo_repo_download_path)
 
+        # set wandb to offline
+        # TODO: Allow user to set this and config his own wandb online account
+        os.environ['WANDB_MODE'] = 'dryrun'
+
 
     
     def train(
