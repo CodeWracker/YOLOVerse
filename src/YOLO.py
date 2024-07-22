@@ -16,7 +16,6 @@ from abc import ABC, abstractmethod
 import yaml
 from contextlib import contextmanager
 
-
 from src.logger import Logger
 
 
@@ -33,13 +32,16 @@ else:
 def temporary_sys_path_addition(path):
     """
     A context manager that temporarily adds a path to sys.path
-    and removes it upon exiting the context.
     """
+    sys.path.insert(0, str(path))  # Adiciona o caminho ao início da lista
+    original_sys_modules = sys.modules.copy()
+
     try:
-        sys.path.append(str(path))
         yield
     finally:
-        sys.path.remove(str(path))
+        sys.path.remove(str(path))  # Remove o caminho adicionado
+        sys.modules.clear()  # Limpa os módulos atuais
+        sys.modules.update(original_sys_modules)  # Restaura o estado original dos módulos
 
 
 class BoundingBoxDetection:

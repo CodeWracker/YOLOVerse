@@ -8,7 +8,6 @@ import yaml
 
 
 
-
 from src.yolo import YOLO, YOLOOptions, temporary_sys_path_addition
 
 class YOLOv5(YOLO):

@@ -106,8 +106,11 @@ class YOLOv7(YOLO):
         # train the model
          
 
+        # save imports state
+
         with temporary_sys_path_addition(self.version_folder):
             self.handle_log_event(f'The path now is: {sys.path}', 1)
+
 
             from yolo_repo.yolov7.train import train as yolov7_train
             from yolo_repo.yolov7.utils.general import increment_path
@@ -129,6 +132,7 @@ class YOLOv7(YOLO):
                 # train the model
                 self.handle_log_event("Training the model.", 3)
                 yolov7_train(hyp_yaml, options, device, None)
+        
 
 
         return  
